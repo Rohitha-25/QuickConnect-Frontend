@@ -1,0 +1,106 @@
+/* services.css */
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f5f3eb; /* soft beige like the logo background */
+  color: #1a1a1a;
+}
+
+.home-containers {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 195%;
+}
+
+.home-headers {
+  display: inline-flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f1efe7;
+    padding: 16px 32px;
+    border-bottom: 2px solid #fbc531;
+    width: 207%;
+}
+
+.logo-section {
+  cursor: pointer;
+}
+
+nav a {
+  margin: 0 15px;
+  text-decoration: none;
+  color: #0d2842; /* navy blue */
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+nav a:hover {
+  color: #f4b400; /* mustard yellow */
+}
+
+.service-wrapper {
+  padding: 2rem;
+  flex: 1;
+  
+}
+
+.service-wrapper h2 {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 0.25rem;
+  color: #0d2842;
+}
+
+.sub-text {
+  text-align: center;
+  color: #f4b400;
+  margin-bottom: 2rem;
+  font-style: italic;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.service-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 2px solid #e2dfd6;
+}
+
+.service-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.service-card img {
+  width: 100%;
+  max-height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.service-card h3 {
+  font-size: 1.25rem;
+  margin: 0.5rem 0;
+  color: #0d2842;
+}
+
+.service-card p {
+  font-size: 0.95rem;
+  color: #4a4a4a;
+}
+
+.service-card strong {
+  font-size: 1.1rem;
+  color: #f4b400;
+}
