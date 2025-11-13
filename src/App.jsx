@@ -5,6 +5,7 @@ import Login from './components/login';
 import Register from './components/register';
 import Home from './components/home';
 import Services from './components/services';
+import Logout from './components/logout';
 
 function HomePage() {
   const navigate = useNavigate();

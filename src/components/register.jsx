@@ -7,7 +7,7 @@ import '../css/register.css';
 const Register = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: '', email: '', password: '', phone: ''
+    name: '', email: '', password: '', phone: '', role: ''
   });
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -47,7 +47,14 @@ const Register = () => {
             <input name="password" type="password" placeholder="Password" value={formData.password} onChange={handleChange} required />
           </div>
           <div className="input-group">
-            <input name="phone" placeholder="Phone" value={formData.phone} onChange={handleChange} />
+            <input name="phone" placeholder="Phone" value={formData.phone} onChange={handleChange} required />
+          </div>
+          <div className="input-group">
+            <select name="role" value={formData.role} onChange={handleChange} required>
+              <option value="" disabled>Register as:</option>
+              <option value="USER">User</option>
+              <option value="PROVIDER">Service Provider</option>
+            </select>
           </div>
 
           <button type="submit" className="submit-btn">Register</button>
