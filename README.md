@@ -1,4 +1,4 @@
-#  QuickConnect – Frontend
+# 👨‍🔧 QuickConnect – Frontend
 
 ## Overview
 QuickConnect is a service booking platform frontend built with React, enabling users to browse services, book appointments, and interact with providers.
