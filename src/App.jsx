@@ -1,36 +1,37 @@
-import React from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
-import './App.css';
-import Login from './components/login';
-import Register from './components/register';
-import Home from './components/home';
-import Services from './components/services';
-import Logout from './components/logout';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import './index.css';
 
-function HomePage() {
-  const navigate = useNavigate();
+import Login            from './components/Login';
+import Register         from './components/Register';
+import Home             from './components/Home';
+import Services         from './components/Services';
+import Booking          from './components/Booking';
+import ConfirmSlot      from './components/ConfirmSlot';
+import Payment          from './components/Payment';
+import BookingConfirmed from './components/BookingConfirmed';
+import Review           from './components/Review';
+import Logout           from './components/Logout';
 
-  return (
-    <div className="container">
-      <img style={{ width: '350px', height: '350px' }} src="images/Media.jpg" alt="QuickConnect Logo" className="logo animate" />
-
-      <div className="button-group animate">
-        <button className="btn login" onClick={() => navigate('/components/login')}>Login</button>
-        <button className="btn signup" onClick={() => navigate('/components/register')}>Sign Up</button>
-      </div>
-    </div>
-  );
+function Protected({ children }) {
+  const token = localStorage.getItem('token');
+  return token ? children : <Navigate to="/components/Login" replace />;
 }
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/components/login" element={<Login />} />
-      <Route path="/components/register" element={<Register />} />
-      <Route path="/components/home" element={<Home />} />
-      <Route path="/components/services" element={<Services />} />
-      <Route path="/components/logout" element={<Logout />} />
+      <Route path="/"                         element={<Navigate to="/components/Login" replace />} />
+      <Route path="/components/Login"         element={<Login />} />
+      <Route path="/components/Register"      element={<Register />} />
+      <Route path="/components/Logout"        element={<Logout />} />
+
+      <Route path="/components/Home"               element={<Protected><Home /></Protected>} />
+      <Route path="/components/Services"           element={<Protected><Services /></Protected>} />
+      <Route path="/components/Booking"            element={<Protected><Booking /></Protected>} />
+      <Route path="/components/ConfirmSlot"       element={<Protected><ConfirmSlot /></Protected>} />
+      <Route path="/components/Payment"            element={<Protected><Payment /></Protected>} />
+      <Route path="/components/BookingConfirmed"  element={<Protected><BookingConfirmed /></Protected>} />
+      <Route path="/components/Review"             element={<Protected><Review /></Protected>} />
     </Routes>
   );
 }

@@ -1,129 +1,136 @@
-import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import '../css/home.css';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from '../api';
+import Navbar from './Navbar';
+import AIAssistant from './AIAssistant';
 
-const services = [
-  { name: 'Cleaning', image: '/images/cleaning-person.jpeg' },
-  { name: 'Car Repair', image: '/images/car repair.webp' },
-  { name: 'Electrician', image: '/images/Electrician.jpg' },
-  { name: 'Haircut', image: '/images/salon.jpg' },
-  { name: 'Laptop Repair', image: '/images/laptop repair.jpg' },
-  { name: 'Yoga Trainer', image: '/images/yoga.jpg' },
-];
-
-const predefinedLocations = [
-  'Ahmedabad',
-  'Bangalore',
-  'Chennai',
-  'Delhi',
-  'Hyderabad',
-  'Jaipur',
-  'Kochi',
-  'Mumbai',
-  'Pune',
-  'Trivandrum'
-];
-
-const Home = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredServices, setFilteredServices] = useState(services);
-  const [location, setLocation] = useState('Select location');
-  const navigate = useNavigate();
-
-  const handleLogoClick = () => {
-    navigate('/components/home');
-  };
-
-  const handleDetectLocation = () => {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          try {
-            const res = await axios.get(
-              `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
-            );
-            const city = res.data?.address?.city || res.data?.address?.town || res.data?.address?.state;
-            setLocation(city || 'Detected');
-          } catch {
-            setLocation('Unable to detect');
-          }
-        },
-        () => setLocation('Permission denied')
-      );
-    } else {
-      setLocation('Not supported');
-    }
-  };
-
-  useEffect(() => {
-    if (searchTerm.trim() === '') {
-      setFilteredServices(services);
-    } else {
-      const filtered = services.filter(service =>
-        service.name.toLowerCase().startsWith(searchTerm.toLowerCase())
-        );
-      setFilteredServices(filtered);
-    }
-  }, [searchTerm]);
-
-  return (
-    <div className="home-container">
-      <header className="home-header">
-        <div className="logo-section">
-          <img
-            style={{ width: '250px', height: '100px', cursor: 'pointer' }}
-            src="/images/logo.jpg"
-            alt="QuickConnect Logo"
-            onClick={handleLogoClick}
-          />
-        </div>
-        <nav className="navbar-links">
-          <div className="location-selector">
-              <select value={location} onChange={(e) => setLocation(e.target.value)}>
-                <option disabled>Select location</option>
-                {predefinedLocations.map((city, idx) => (
-                  <option key={idx} value={city}>{city}</option>
-                ))}
-              </select>
-              <button onClick={handleDetectLocation}>📍</button>
-          </div>
-          <Link to="/components/home">Home</Link>
-          <Link to="/components/services">Services</Link>
-          <Link to="/components/booking">Bookings</Link>
-          <Link to="/components/logout">Logout</Link>
-        </nav>
-      </header>
-
-      <main className="main-content">
-        <h2>Home Services, On Demand, At QuickConnect.</h2>
-        <p className="sub-text">Let expertise meet your needs</p>
-
-        <div className="search-bar">
-          <input
-            type="text"
-            placeholder="Search services.."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        <div className="service-cards">
-          {filteredServices.length > 0 ? (
-            filteredServices.map((service, idx) => (
-              <div key={idx} className="card">
-                <img src={service.image} alt={service.name} />
-                <p>{service.name}</p>
-              </div>
-            ))
-          ) : (
-            <p style={{ marginTop: '20px' }}>No services found.</p>
-          )}
-        </div>
-      </main>
-    </div>
-  );
+const CATEGORY_ICONS = {
+  cleaning:       { icon: '🧹', bg: 'var(--navy-bg)', color: 'var(--navy)' },
+  electrician:    { icon: '⚡', bg: 'var(--gold-bg)', color: 'var(--gold-text)' },
+  'car repair':   { icon: '🚗', bg: 'var(--navy-bg)', color: 'var(--navy)' },
+  salon:          { icon: '✂️', bg: 'var(--gold-bg)', color: 'var(--gold-text)' },
+  'laptop repair':{ icon: '💻', bg: 'var(--navy-bg)', color: 'var(--navy)' },
+  yoga:           { icon: '🧘', bg: 'var(--gold-bg)', color: 'var(--gold-text)' },
 };
 
-export default Home;
+const getIconData = (category = '') => {
+  const key = Object.keys(CATEGORY_ICONS).find(k => category.toLowerCase().includes(k));
+  return key ? CATEGORY_ICONS[key] : { icon: '🔧', bg: 'var(--navy-bg)', color: 'var(--navy)' };
+};
+
+export default function Home() {
+  const [services, setServices]       = useState([]);
+  const [search, setSearch]           = useState('');
+  const [showAI, setShowAI]           = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    axios.get('/services').then(r => setServices(r.data)).catch(console.error);
+  }, []);
+
+  const filtered = services.filter(s =>
+    s.serviceName?.toLowerCase().includes(search.toLowerCase()) ||
+    s.category?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleSearch = () => {
+    if (search.trim()) navigate(`/components/Services?q=${encodeURIComponent(search)}`);
+  };
+
+  const handleServiceClick = (service) => {
+    localStorage.setItem('preselectedServiceId', service.id);
+    navigate('/components/Booking');
+  };
+
+  return (
+    <div className="qc-page">
+      <Navbar />
+
+      <div className="qc-container" style={{ paddingTop: '48px', paddingBottom: '48px' }}>
+
+        {/* Hero */}
+        <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+          <h1 style={{ fontSize: '32px', fontWeight: '700', color: 'var(--navy)', marginBottom: '8px' }}>
+            Home Services. On Demand.
+          </h1>
+          <p style={{ fontSize: '15px', color: 'var(--gold-text)', marginBottom: '24px' }}>
+            where needs meet expertise..
+          </p>
+
+          {/* Search bar */}
+          <div style={{ display: 'flex', gap: '10px', maxWidth: '520px', margin: '0 auto' }}>
+            <input
+              className="qc-input"
+              placeholder="Search for a service..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSearch()}
+              style={{ flex: 1 }}
+            />
+            <button className="btn-primary" onClick={handleSearch} style={{ padding: '10px 24px', whiteSpace: 'nowrap' }}>
+              Search
+            </button>
+          </div>
+        </div>
+
+        {/* AI Banner */}
+        <div className="qc-ai-banner" style={{ marginBottom: '36px' }}>
+          <div className="qc-ai-icon">✦</div>
+          <div className="qc-ai-text" style={{ flex: 1 }}>
+            <h4>Not sure what you need?</h4>
+            <p>Tell our assistant what's wrong — it'll find the right service for you</p>
+          </div>
+          <button className="btn-primary" onClick={() => setShowAI(true)}>
+            Ask now
+          </button>
+        </div>
+
+        {/* Categories grid */}
+        <p className="qc-section-label">Popular categories</p>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '14px'
+        }}>
+          {(search ? filtered : services).map(service => {
+            const { icon, bg, color } = getIconData(service.category || service.serviceName);
+            return (
+              <div
+                key={service.id}
+                className="qc-card"
+                onClick={() => handleServiceClick(service)}
+                style={{ padding: '24px 16px', textAlign: 'center', cursor: 'pointer' }}
+              >
+                <div style={{
+                  width: '52px', height: '52px', borderRadius: '50%',
+                  background: bg, display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', margin: '0 auto 12px', fontSize: '24px'
+                }}>
+                  {icon}
+                </div>
+                <p style={{ fontSize: '13px', fontWeight: '600', color: 'var(--navy)', marginBottom: '4px' }}>
+                  {service.serviceName}
+                </p>
+                <p style={{ fontSize: '12px', color: 'var(--muted)' }}>
+                  ₹{service.price}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+
+        {filtered.length === 0 && search && (
+          <div style={{ textAlign: 'center', padding: '48px', color: 'var(--muted)' }}>
+            <p style={{ fontSize: '32px', marginBottom: '8px' }}>🔍</p>
+            <p>No services found for "{search}"</p>
+            <button className="btn-outline" style={{ marginTop: '16px' }} onClick={() => setSearch('')}>
+              Clear search
+            </button>
+          </div>
+        )}
+      </div>
+
+      {showAI && <AIAssistant onClose={() => setShowAI(false)} services={services} />}
+    </div>
+  );
+}

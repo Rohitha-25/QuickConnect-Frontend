@@ -1,67 +1,127 @@
-// src/components/Register.js
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from '../api';
-import { useNavigate } from 'react-router-dom';
-import '../css/register.css';
 
-const Register = () => {
+export default function Register() {
+  const [form, setForm]       = useState({ name: '', email: '', password: '', confirm_password: '', phone: '', role: 'USER' });
+  const [error, setError]     = useState('');
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    name: '', email: '', password: '', phone: '', role: ''
-  });
-  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage('');
+    setError(''); setMessage('');
+    if (!form.name || !form.email || !form.password || !form.phone) {
+      setError('Please fill in all fields.'); return;
+    }
+    if (form.password.length < 8) {
+      setError('Password must be at least 8 characters.'); return;
+    }
+    if (form.confirm_password != form.password) {
+      setError('Password doesn\'t match!'); return;
+    }
+    setLoading(true);
     try {
-      await axios.post('/auth/register', formData);
-      navigate('/components/login'); // 🔁 Redirect to login after successful registration
+      const endpoint = form.role === 'PROVIDER'
+        ? '/auth/register/provider'
+        : '/auth/register';
+      await axios.post(endpoint, form);
+      setMessage('Account created! Redirecting to login...');
+      setTimeout(() => navigate('/components/Login'), 1500);
     } catch (err) {
-      setErrorMessage('Registration failed. Please try again.');
+      setError(err?.response?.data?.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="page-container">
-      <div className="register-container">
-        <div className='imageContainer'>
-            <h1 className="title animate">Quick Connect</h1>
-            <p className="tagline animate">where needs meet expertise</p>
+    <div className="qc-auth-page">
+      <div className="qc-auth-card">
+
+        <div className="qc-auth-logo">
+          <img src="/images/logo.jpg" alt="QuickConnect" />
         </div>
-        <form onSubmit={handleSubmit} className="register-form">
-          <h2>Sign Up</h2>
-          {errorMessage && <p className="error-message">{errorMessage}</p>}
-          
-          <div className="input-group">
-            <input name="name" placeholder="Name" value={formData.name} onChange={handleChange} required />
-          </div>
-          <div className="input-group">
-            <input name="email" type="email" placeholder="Email" value={formData.email} onChange={handleChange} required />
-          </div>
-          <div className="input-group">
-            <input name="password" type="password" placeholder="Password" value={formData.password} onChange={handleChange} required />
-          </div>
-          <div className="input-group">
-            <input name="phone" placeholder="Phone" value={formData.phone} onChange={handleChange} required />
-          </div>
-          <div className="input-group">
-            <select name="role" value={formData.role} onChange={handleChange} required>
-              <option value="" disabled>Register as:</option>
-              <option value="USER">User</option>
-              <option value="PROVIDER">Service Provider</option>
-            </select>
+
+        <h2 className="qc-auth-title">Create an account</h2>
+
+        {error   && <div className="qc-error">{error}</div>}
+        {message && <div className="qc-success">{message}</div>}
+
+        <form onSubmit={handleSubmit}>
+
+          {/* Role toggle */}
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+            {['USER', 'PROVIDER'].map(role => (
+              <button
+                key={role}
+                type="button"
+                onClick={() => setForm(f => ({ ...f, role }))}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  border: `2px solid ${form.role === role ? 'var(--navy)' : 'var(--border)'}`,
+                  borderRadius: '8px',
+                  background: form.role === role ? 'var(--navy)' : 'var(--white)',
+                  color: form.role === role ? 'var(--gold)' : 'var(--muted)',
+                  fontWeight: '600',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {role === 'USER' ? '🧑 Customer' : '⚙️ Provider'}
+              </button>
+            ))}
           </div>
 
-          <button type="submit" className="submit-btn">Register</button>
+          <div className="qc-field">
+            <label className="qc-label">Name</label>
+            <input className="qc-input" name="name" placeholder="James Bond"
+              value={form.name} onChange={handleChange} required />
+          </div>
+
+          <div className="qc-field">
+            <label className="qc-label">Email</label>
+            <input className="qc-input" name="email" type="email" placeholder="jamesbond7@mail.com"
+              value={form.email} onChange={handleChange} required />
+          </div>
+
+          <div className="qc-field">
+            <label className="qc-label">Phone</label>
+            <input className="qc-input" name="phone" placeholder="+91 98765 43210"
+              value={form.phone} onChange={handleChange} required />
+          </div>
+
+          <div className="qc-field">
+            <label className="qc-label">Password</label>
+            <input className="qc-input" name="password" type="password" placeholder="Enter your password"
+              value={form.password} onChange={handleChange} required />
+          </div>
+
+          <div className="qc-field">
+            <label className="qc-label">Confirm Password</label>
+            <input className="qc-input" name="confirm_password" type="password" placeholder="Confirm your password"
+              value={form.confirm_password} onChange={handleChange} required />
+          </div>
+
+          <button
+            type="submit"
+            className="btn-primary"
+            disabled={loading}
+            style={{ width: '100%', justifyContent: 'center', padding: '12px', marginTop: '8px' }}
+          >
+            {loading ? <><span className="qc-spinner" /> Creating account...</> : 'Create Account →'}
+          </button>
         </form>
+
+        <p className="qc-auth-footer">
+          Already have an account? <Link to="/components/Login">Login</Link>
+        </p>
       </div>
     </div>
   );
-};
-
-export default Register;
+}

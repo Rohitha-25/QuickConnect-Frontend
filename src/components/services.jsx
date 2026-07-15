@@ -1,68 +1,131 @@
-import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import '../css/services.css';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from '../api';
+import Navbar from './Navbar';
 
-const Services = () => {
-  const [services, setServices] = useState([]);
-  const [loading, setLoading] = useState(true);
+const CATEGORY_ICONS = {
+  cleaning:       '🧹',
+  electrician:    '⚡',
+  'car repair':   '🚗',
+  salon:          '✂️',
+  'laptop repair':'💻',
+  yoga:           '🧘',
+};
+
+const getIcon = (category = '') => {
+  const key = Object.keys(CATEGORY_ICONS).find(k => category.toLowerCase().includes(k));
+  return key ? CATEGORY_ICONS[key] : '🔧';
+};
+
+export default function Services() {
+  const [services, setServices]   = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [search, setSearch]       = useState('');
+  const [searchParams]            = useSearchParams();
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('/api/services')
-      .then((response) => {
-        setServices(response.data);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error('Error fetching services:', error);
-        setLoading(false);
-      });
+    // Pre-fill search from URL query (from home page search)
+    const q = searchParams.get('q');
+    if (q) setSearch(q);
+
+    axios.get('/services')
+      .then(r => { setServices(r.data); setLoading(false); })
+      .catch(() => setLoading(false));
   }, []);
 
-  const handleLogoClick = () => {
-    navigate('/components/home');
+  const filtered = services.filter(s =>
+    s.serviceName?.toLowerCase().includes(search.toLowerCase()) ||
+    s.category?.toLowerCase().includes(search.toLowerCase()) ||
+    s.description?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleBook = (service) => {
+    localStorage.setItem('preselectedServiceId', service.id);
+    navigate('/components/Booking');
   };
 
   return (
-    <div className="home-containers">
-      <header className="home-header">
-        <div className="logo-section" onClick={handleLogoClick}>
-          <img
-            style={{ width: '250px', height: '100px' }}
-            src="/images/logo.jpg"
-            alt="QuickConnect Logo"
+    <div className="qc-page">
+      <Navbar />
+
+      <div className="qc-container" style={{ paddingTop: '36px', paddingBottom: '48px' }}>
+
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <h2 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--navy)' }}>All Services</h2>
+            <p style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '4px' }}>
+              {filtered.length} service{filtered.length !== 1 ? 's' : ''} available
+            </p>
+          </div>
+          <input
+            className="qc-input"
+            placeholder="Filter services..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{ width: '240px' }}
           />
         </div>
-        <nav>
-          <Link to="/components/home">Home</Link>
-          <Link to="/components/services">Services</Link>
-          <Link to="/components/booking">Bookings</Link>
-          <Link to="/components/logout">Logout</Link>
-        </nav>
-      </header>
-
-      <main className="service-wrapper">
-        <h2>Our Services..</h2>
-        <p className="sub-text">what we offer to make your life easier</p>
 
         {loading ? (
-          <p>Loading services...</p>
+          <div style={{ textAlign: 'center', padding: '80px', color: 'var(--muted)' }}>
+            <span className="qc-spinner" style={{ width: '28px', height: '28px' }} />
+          </div>
         ) : (
-          <div className="services-grid">
-            {services.map((service) => (
-              <div className="service-card" key={service.id}>
-                <img src={service.imageUrl} alt={service.serviceName} />
-                <h3>{service.serviceName}</h3>
-                <p>{service.description}</p>
-                <p><strong>₹{service.price}</strong></p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+            {filtered.map(service => (
+              <div key={service.id} className="qc-card" style={{ padding: '20px' }}>
+                {/* Icon + name */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <div style={{
+                    width: '48px', height: '48px', borderRadius: '12px',
+                    background: 'var(--navy-bg)', display: 'flex',
+                    alignItems: 'center', justifyContent: 'center', fontSize: '22px', flexShrink: 0
+                  }}>
+                    {getIcon(service.category || service.serviceName)}
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '15px', fontWeight: '600', color: 'var(--navy)' }}>
+                      {service.serviceName}
+                    </h3>
+                    <p style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      {service.category}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <p style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.6', marginBottom: '16px' }}>
+                  {service.description || 'Professional service by verified experts.'}
+                </p>
+
+                {/* Footer */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '18px', fontWeight: '700', color: 'var(--navy)' }}>
+                    ₹{service.price}
+                  </span>
+                  <button className="btn-primary" style={{ padding: '8px 16px', fontSize: '13px' }}
+                    onClick={() => handleBook(service)}>
+                    Book Now
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         )}
-      </main>
+
+        {!loading && filtered.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '80px', color: 'var(--muted)' }}>
+            <p style={{ fontSize: '40px', marginBottom: '12px' }}>🔍</p>
+            <p style={{ fontSize: '16px', fontWeight: '500', marginBottom: '6px' }}>No services found</p>
+            <p style={{ fontSize: '13px' }}>Try a different search term</p>
+            <button className="btn-outline" style={{ marginTop: '20px' }} onClick={() => setSearch('')}>
+              Show all services
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
-};
-
-export default Services;
+}

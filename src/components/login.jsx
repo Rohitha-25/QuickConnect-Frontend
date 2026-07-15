@@ -1,97 +1,82 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from '../api';
-import { useNavigate } from 'react-router-dom';
-import '../css/login.css';
-import Home from './home';
 
-const Login = () => {
-  const [email, setEmail] = useState('');
+export default function Login() {
+  const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [error, setError]       = useState('');
+  const [loading, setLoading]   = useState(false);
   const navigate = useNavigate();
-
-  // Custom email validation regex
-  const validateEmail = (email) => {
-    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-    return emailRegex.test(email);
-  };
-
-  // Custom password validation
-  const validatePassword = (password) => {
-    return password.length >= 8;
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    setErrorMessage(''); // Reset error message
-
-    // Validate email and password
-    if (!email && !password) {
-        setErrorMessage('Fill all the required fields.');
-        return;
-      }
-    
-    if (!validateEmail(email)) {
-      setErrorMessage('Please enter a valid email.');
-      return;
-    }
-
-    if (!validatePassword(password)) {
-      setErrorMessage('Please enter a vaild password of 8 characters.');
-      return;
-    }
-
+    setError('');
+    if (!email || !password) { setError('Please fill in all fields.'); return; }
     setLoading(true);
-
     try {
-      const response = await axios.post('/auth/login', { email, password });
-      navigate('/components/home');
-      localStorage.setItem('token', response.data.token); // Store the JWT token
-      
-    } catch (err) {
-      setErrorMessage('Login failed. Please check your credentials and try again.');
+      const res = await axios.post('/auth/login', { email, password });
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('userId', res.data.userId);
+      navigate('/components/Home');
+    } catch {
+      setError('Invalid email or password. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="page-container">
-      <div className="login-container">
-        <form onSubmit={handleSubmit} className="login-form">
-        <div className="imageContainer">
-            <h1  className="title animate">Quick Connect</h1>
-            <p className="tagline animate" >where needs meet expertise</p>
+    <div className="qc-auth-page">
+      <div className="qc-auth-card">
+
+        <div className="qc-auth-logo">
+          <img src="/images/logo.jpg" alt="QuickConnect" />
         </div>
-          <h2>Login</h2>
-          
-          <div className="input-group">
+
+        <h2 className="qc-auth-title">Login</h2>
+
+        {error && <div className="qc-error">{error}</div>}
+
+        <form onSubmit={handleSubmit}>
+          <div className="qc-field">
+            <label className="qc-label">Email</label>
             <input
+              className="qc-input"
               type="email"
-              placeholder="Email"
+              placeholder="jamesbond7@mail.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
+              required
             />
-            
           </div>
-          <div className="input-group">
+
+          <div className="qc-field">
+            <label className="qc-label">Password</label>
             <input
+              className="qc-input"
               type="password"
-              placeholder="Password"
+              placeholder="Enter your password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
+              required
             />
           </div>
-          {errorMessage && <p className="error-message">{errorMessage}</p>}
-          <button type="submit" className="submit-btn" disabled={loading}>
-            {loading ? 'Logging in..' : 'Login'}
+
+          <button
+            type="submit"
+            className="btn-primary"
+            disabled={loading}
+            style={{ width: '100%', justifyContent: 'center', padding: '12px', marginTop: '8px' }}
+          >
+            {loading ? <><span className="qc-spinner" /> Logging in...</> : 'Login →'}
           </button>
         </form>
+
+        <p className="qc-auth-footer">
+          Don't have an account? <Link to="/components/Register">Sign up</Link>
+        </p>
       </div>
     </div>
   );
-};
-
-export default Login;
+}

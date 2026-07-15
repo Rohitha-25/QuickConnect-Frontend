@@ -1,19 +1,11 @@
-// Logout.jsx
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const Logout = () => {
+export default function Logout() {
   const navigate = useNavigate();
-
   useEffect(() => {
-    // Remove the token and any user info from localStorage
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-
-    navigate('/components/login');
-  }, [navigate]);
-
-  return <p>Logging out..</p>;
-};
-
-export default Logout;
+    localStorage.clear();
+    navigate('/components/Login');
+  }, []);
+  return null;
+}
