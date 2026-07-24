@@ -1,15 +1,22 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
+const INDIAN_CITIES = [
+  'Hyderabad', 'Bangalore', 'Mumbai', 'Delhi', 'Chennai',
+  'Kolkata', 'Pune', 'Ahmedabad', 'Jaipur', 'Surat',
+  'Lucknow', 'Kanpur', 'Nagpur', 'Indore', 'Bhopal',
+  'Visakhapatnam', 'Coimbatore', 'Kochi', 'Chandigarh', 'Guwahati',
+];
+
 export default function Navbar() {
-  const [city, setCity]           = useState(localStorage.getItem('qc_city') || '');
-  const [detecting, setDetecting] = useState(false);
-  const [editing, setEditing]     = useState(false);
-  const [draft, setDraft]         = useState('');
+  const [city, setCity]                 = useState(localStorage.getItem('qc_city') || '');
+  const [detecting, setDetecting]       = useState(false);
+  const [showPicker, setShowPicker]     = useState(false);
+  const [search, setSearch]               = useState('');
+
   const inputRef = useRef(null);
   const navigate = useNavigate();
 
-  // Auto-detect city on first load if none saved
   useEffect(() => {
     if (city) return;
     setDetecting(true);
@@ -30,15 +37,14 @@ export default function Navbar() {
           setCity(detected);
           localStorage.setItem('qc_city', detected);
         } catch {
-          setCity('Set location');
+          setShowPicker(true);
         } finally {
           setDetecting(false);
         }
       },
       () => {
-        // User denied or error — let them type it
-        setCity('Set location');
         setDetecting(false);
+        setShowPicker(true);
       }
     );
   }, []);
@@ -48,24 +54,21 @@ export default function Navbar() {
     navigate('/components/Login');
   };
 
-  const openEdit = () => {
-    setDraft(city === 'Set location' ? '' : city);
-    setEditing(true);
-    setTimeout(() => inputRef.current?.focus(), 50);
+  const selectCity = (c) => {
+    setCity(c);
+    localStorage.setItem('qc_city', c);
+    setShowPicker(false);
+    setSearch('');
   };
 
-  const saveCity = () => {
-    const trimmed = draft.trim();
-    if (trimmed) {
-      setCity(trimmed);
-      localStorage.setItem('qc_city', trimmed);
-    }
-    setEditing(false);
-  };
+  const filteredCities = INDIAN_CITIES.filter(c => 
+    c.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <nav className="qc-navbar">
       <div className="qc-navbar-inner">
+
         {/* Brand */}
         <Link to="/components/Home" className="qc-brand">
           <div className="qc-brand-icon">
@@ -76,43 +79,115 @@ export default function Navbar() {
         {/* Links */}
         <div className="qc-nav-links">
 
-          {/* Location */}
-          {editing ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '13px' }}>📍</span>
-              <input
-                ref={inputRef}
-                value={draft}
-                onChange={e => setDraft(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') saveCity(); if (e.key === 'Escape') setEditing(false); }}
-                onBlur={saveCity}
-                placeholder="Enter city..."
-                style={{
-                  border: 'none', borderBottom: '1.5px solid var(--navy)',
-                  background: 'transparent', outline: 'none',
-                  fontSize: '13px', color: 'var(--navy)', width: '110px',
-                  fontFamily: 'Inter, sans-serif', padding: '2px 0',
-                }}
-              />
-            </div>
-          ) : (
+          {/* Location picker */}
+          <div ref={pickerRef} style={{ position: 'relative' }}>
             <button
-              onClick={openEdit}
+              onClick={() => setShowPicker(v => !v)}
               style={{
                 background: 'none', border: 'none', cursor: 'pointer',
-                fontSize: '13px', color: 'var(--muted)',
+                fontSize: '13px', color: 'var(--muted)', padding: 0,
                 display: 'flex', alignItems: 'center', gap: '4px',
-                fontFamily: 'Inter, sans-serif', padding: 0,
+                fontFamily: 'Inter, sans-serif',
               }}
-              title="Click to change location"
             >
               📍 {detecting ? 'Detecting...' : city || 'Set location'}
-              <span style={{ fontSize: '10px', color: 'var(--border)', marginLeft: '2px' }}></span>
+              <span style={{ fontSize: '9px', color: 'var(--border)' }}>▼</span>
             </button>
-          )}
+
+            {/* Dropdown */}
+            {showPicker && (
+              <div style={{
+                position: 'absolute', top: 'calc(100% + 10px)', left: '50%',
+                transform: 'translateX(-50%)',
+                background: 'var(--white)', border: '1.5px solid var(--border)',
+                borderRadius: '12px', padding: '12px',
+                width: '220px', zIndex: 300,
+                boxShadow: '0 8px 24px rgba(4,44,83,0.12)',
+              }}>
+                <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
+                  Select your city
+                </p>
+
+                {/* Search within cities */}
+                <input
+                  autoFocus
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Search city..."
+                  style={{
+                    width: '100%', padding: '7px 10px', marginBottom: '8px',
+                    border: '1.5px solid var(--border)', borderRadius: '8px',
+                    fontSize: '12px', outline: 'none', fontFamily: 'Inter, sans-serif',
+                    color: 'var(--text)',
+                  }}
+                  onFocus={e => e.target.style.borderColor = 'var(--navy)'}
+                  onBlur={e => e.target.style.borderColor = 'var(--border)'}
+                />
+
+                {/* Detect automatically option */}
+                <button
+                  onClick={() => {
+                    setShowPicker(false);
+                    setCity('');
+                    localStorage.removeItem('qc_city');
+                    setDetecting(true);
+                    navigator.geolocation?.getCurrentPosition(
+                      async (pos) => {
+                        try {
+                          const { latitude, longitude } = pos.coords;
+                          const res = await fetch(
+                            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+                          );
+                          const data = await res.json();
+                          const detected = data.address?.city || data.address?.town || data.address?.state_district || '';
+                          if (detected) { setCity(detected); localStorage.setItem('qc_city', detected); }
+                        } catch {}
+                        finally { setDetecting(false); }
+                      },
+                      () => setDetecting(false)
+                    );
+                  }}
+                  style={{
+                    width: '100%', padding: '7px 10px', marginBottom: '6px',
+                    background: 'var(--navy-bg)', border: '1.5px solid var(--navy-bg)',
+                    borderRadius: '8px', fontSize: '12px', fontWeight: '600',
+                    color: 'var(--navy)', cursor: 'pointer', textAlign: 'left',
+                    fontFamily: 'Inter, sans-serif',
+                  }}
+                >
+                  📡 Detect my location
+                </button>
+
+                {/* City list */}
+                <div style={{ maxHeight: '180px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  {filteredCities.map(c => (
+                    <button
+                      key={c}
+                      onClick={() => selectCity(c)}
+                      style={{
+                        padding: '7px 10px', background: city === c ? 'var(--navy-bg)' : 'transparent',
+                        border: 'none', borderRadius: '6px', fontSize: '13px',
+                        color: city === c ? 'var(--navy)' : 'var(--text)',
+                        fontWeight: city === c ? '600' : '400',
+                        cursor: 'pointer', textAlign: 'left', fontFamily: 'Inter, sans-serif',
+                        transition: 'background 0.15s',
+                      }}
+                      onMouseEnter={e => { if (city !== c) e.target.style.background = 'var(--bg)'; }}
+                      onMouseLeave={e => { if (city !== c) e.target.style.background = 'transparent'; }}
+                    >
+                      {c}
+                    </button>
+                    ))}
+                    {filteredCities.length === 0 && (
+                      <p style={{ fontSize: '12px', color: 'var(--muted)', padding: '6px 10px' }}>No cities found!</p>
+                    )}
+                </div>
+              </div>
+            )}
+          </div>
 
           <Link to="/components/Services" style={{ fontWeight: 'bold', color: '#031E3A' }}>Services</Link>
-          <Link to="/components/Booking" style={{ fontWeight: 'bold', color: '#031E3A' }}>Bookings</Link>
+          <Link to="/components/BookingHistory" style={{ fontWeight: 'bold', color: '#031E3A' }}>Bookings</Link>
           <button style={{ fontWeight: 'bolder', color: '#031E3A' }} onClick={handleLogout}>Logout</button>
         </div>
       </div>

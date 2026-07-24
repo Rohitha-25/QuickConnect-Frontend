@@ -18,6 +18,7 @@ export default function Login() {
       const res = await axios.post('/auth/login', { email, password });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('userId', res.data.userId);
+      localStorage.setItem('userName', res.data.userName);
       navigate('/components/Home');
     } catch {
       setError('Invalid email or password. Please try again.');

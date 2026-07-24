@@ -4,6 +4,8 @@ import axios from '../api';
 import Navbar from './Navbar';
 import AIAssistant from './AIAssistant';
 
+const userName = localStorage.getItem('userName') || 'there';
+
 const CATEGORY_ICONS = {
   cleaning:       { icon: '🧹', bg: 'var(--navy-bg)', color: 'var(--navy)' },
   electrician:    { icon: '⚡', bg: 'var(--gold-bg)', color: 'var(--gold-text)' },
@@ -50,6 +52,9 @@ export default function Home() {
 
         {/* Hero */}
         <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+          <p style={{ fontSize: '14px', color: 'var(--muted)', marginBottom: '4px' }}>
+            👋 Hi, <strong style={{ color: 'var(--navy)' }}>{userName}</strong>
+          </p>
           <h1 style={{ fontSize: '32px', fontWeight: '700', color: 'var(--navy)', marginBottom: '8px' }}>
             Home Services. On Demand.
           </h1>
@@ -92,7 +97,7 @@ export default function Home() {
           gridTemplateColumns: 'repeat(3, 1fr)',
           gap: '14px'
         }}>
-          {(search ? filtered : services).map(service => {
+          {(search ? filtered : services.slice(0, 6)).map(service => {
             const { icon, bg, color } = getIconData(service.category || service.serviceName);
             return (
               <div
