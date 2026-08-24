@@ -12,9 +12,9 @@ export default function Navbar() {
   const [city, setCity]                 = useState(localStorage.getItem('qc_city') || '');
   const [detecting, setDetecting]       = useState(false);
   const [showPicker, setShowPicker]     = useState(false);
-  const [search, setSearch]               = useState('');
+  const [search, setSearch]             = useState('');
 
-  const inputRef = useRef(null);
+  const pickerRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -186,6 +186,7 @@ export default function Navbar() {
             )}
           </div>
 
+          <Link to="/components/Profile" style={{ fontWeight: 'bold', color: '#031E3A' }}>Profile</Link>
           <Link to="/components/Services" style={{ fontWeight: 'bold', color: '#031E3A' }}>Services</Link>
           <Link to="/components/BookingHistory" style={{ fontWeight: 'bold', color: '#031E3A' }}>Bookings</Link>
           <button style={{ fontWeight: 'bolder', color: '#031E3A' }} onClick={handleLogout}>Logout</button>

@@ -6,14 +6,15 @@ import Navbar from './Navbar';
 const CATEGORY_ICONS = {
   cleaning: '🧹', electrician: '⚡', 'car repair': '🚗',
   salon: '✂️', 'laptop repair': '💻', yoga: '🧘',
+  plumbing: '🛠️', painting: '🖌️',
 };
+
 const getIcon = (cat = '') => {
   const key = Object.keys(CATEGORY_ICONS).find(k => cat.toLowerCase().includes(k));
   return key ? CATEGORY_ICONS[key] : '🔧';
 };
 
 export default function Booking() {
-  const [services, setServices]             = useState([]);
   const [selectedService, setSelectedService] = useState(null);
   const [loading, setLoading]               = useState(false);
   const [message, setMessage]               = useState('');
@@ -21,16 +22,16 @@ export default function Booking() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('/services').then(r => {
-      setServices(r.data);
-      // Pre-select if coming from home/AI
-      const preId = localStorage.getItem('preselectedServiceId');
-      if (preId) {
+    const preId = localStorage.getItem('preselectedServiceId');
+    if (!preId) return;
+
+    axios.get(`/services`)
+      .then(r => {
         const found = r.data.find(s => String(s.id) === String(preId));
         if (found) setSelectedService(found);
         localStorage.removeItem('preselectedServiceId');
-      }
-    }).catch(console.error);
+      })
+      .catch(console.error);
   }, []);
 
   const handleBook = async () => {
@@ -40,6 +41,9 @@ export default function Booking() {
       const userId = localStorage.getItem('userId');
       const res = await axios.post(`/bookings/book/${userId}/${selectedService.id}`);
       localStorage.setItem('bookingId', res.data.id);
+      localStorage.setItem('bookedServiceName', selectedService.serviceName);
+      localStorage.setItem('bookedServicePrice', selectedService.price);
+      localStorage.setItem('bookedServiceCategory', selectedService.category || '');
       setMessage('Booking created! Please confirm your slot...');
       setTimeout(() => navigate('/components/ConfirmSlot'), 1500);
     } catch {
@@ -63,46 +67,16 @@ export default function Booking() {
         </div>
 
         {/* Service selection */}
-        <div style={{ marginBottom: '24px' }}>
-          <label className="qc-label">Choose a service</label>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            {services.map(service => (
-              <div
-                key={service.id}
-                onClick={() => { setSelectedService(service); setError(''); }}
-                style={{
-                  padding: '16px',
-                  border: `2px solid ${selectedService?.id === service.id ? 'var(--navy)' : 'var(--border)'}`,
-                  borderRadius: '12px',
-                  background: selectedService?.id === service.id ? 'var(--navy-bg)' : 'var(--white)',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                }}
-              >
-                <div style={{
-                  width: '40px', height: '40px', borderRadius: '10px',
-                  background: selectedService?.id === service.id ? 'var(--navy)' : 'var(--navy-bg)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '20px', flexShrink: 0
-                }}>
-                  {getIcon(service.category || service.serviceName)}
-                </div>
-                <div>
-                  <p style={{ fontSize: '13px', fontWeight: '600', color: 'var(--navy)' }}>
-                    {service.serviceName}
-                  </p>
-                  <p style={{ fontSize: '12px', color: 'var(--muted)' }}>₹{service.price}</p>
-                </div>
-                {selectedService?.id === service.id && (
-                  <span style={{ marginLeft: 'auto', color: 'var(--navy)', fontWeight: '700' }}>✓</span>
-                )}
-              </div>
-            ))}
+        {!selectedService && (
+          <div style={{ textAlign: 'center', padding: '48px', color: 'var(--muted)' }}>
+            <p style={{ fontSize: '40px', marginBottom: '12px' }}>🛠️</p>
+            <p style={{ fontSize: '15px', fontWeight: '500', marginBottom: '6px' }}>No service selected!</p>
+            <p style={{ fontSize: '13px', marginBottom: '20px' }}>Please go back and choose a service first.</p>
+            <button className="btn-outline" onClick={() => navigate('/components/Services')}>
+              Browse Services
+            </button>
           </div>
-        </div>
+        )}
 
         {/* Summary */}
         {selectedService && (
@@ -113,12 +87,19 @@ export default function Booking() {
             <p style={{ fontSize: '12px', color: 'var(--gold-text)', fontWeight: '600', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Booking Summary
             </p>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{
+                width: '48px', height: '48px', borderRadius: '12px',
+                background: 'rgba(252, 159, 8, 0.15)', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', fontSize: '24px', flexShrink: 0
+              }}>
+                {getIcon(selectedService.category || selectedService.serviceName)}
+              </div>
+              <div style={{ flex: 1 }}>
                 <p style={{ fontSize: '15px', fontWeight: '600', color: 'var(--navy)' }}>{selectedService.serviceName}</p>
                 <p style={{ fontSize: '12px', color: 'var(--muted)' }}>{selectedService.description}</p>
               </div>
-              <p style={{ fontSize: '22px', fontWeight: '700', color: 'var(--navy)' }}>₹{selectedService.price}</p>
+              <p style={{ fontSize: '20px', fontWeight: '700', color: 'var(--navy)' }}>₹{selectedService.price}</p>
             </div>
           </div>
         )}

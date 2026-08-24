@@ -6,6 +6,7 @@ import Navbar from './Navbar';
 const STATUS_STYLES = {
   PENDING:          { bg: '#FEF9EC', color: '#B45309', label: 'Pending' },
   SLOT_CONFIRMED:   { bg: '#EFF6FF', color: '#1D4ED8', label: 'Slot Confirmed' },
+  PENDING_PAYMENT:  { bg: '#FEF3C7', color: '#D97706', label: 'Pending Payment' },
   PAID:             { bg: '#EDFAF4', color: '#1A7C4E', label: 'Paid' },
   VERIFIED:         { bg: '#F0FDF4', color: '#15803D', label: 'Verified' },
   COMPLETED:        { bg: '#F9FAFB', color: '#6B7280', label: 'Completed' },
@@ -17,26 +18,65 @@ const getStatus = (status) =>
 const CATEGORY_ICONS = {
   cleaning: '🧹', electrician: '⚡', 'car repair': '🚗',
   salon: '✂️', 'laptop repair': '💻', yoga: '🧘',
+  plumbing: '🛠️', painting: '🖌️',
 };
+
 const getIcon = (cat = '') => {
   const key = Object.keys(CATEGORY_ICONS).find(k => cat.toLowerCase().includes(k));
   return key ? CATEGORY_ICONS[key] : '🔧';
 };
 
+const PAYMENT_LABELS = {
+  'UPI':                   { icon: '📱', label: 'Paid via UPI' },
+  'CREDIT_CARD/DEBIT_CARD':{ icon: '💳', label: 'Paid via Card' },
+  'NET_BANKING':           { icon: '🌐', label: 'Paid via Net Banking' },
+  'CASH':                  { icon: '💵', label: 'Cash Payment' },
+};
+
 export default function BookingHistory() {
   const [bookings, setBookings] = useState([]);
+  const [paymentModes, setPaymentModes] = useState({});
   const [loading, setLoading]   = useState(true);
   const [filter, setFilter]     = useState('ALL');
+  const [reviewedServices, setReviewedServices] = useState(new Set());
   const userId = localStorage.getItem('userId');
   const navigate = useNavigate();
 
   useEffect(() => {
     axios.get(`/bookings/user/${userId}`)
-      .then(r => { setBookings(r.data); setLoading(false); })
+      .then(r => { 
+        setBookings(r.data); 
+        setLoading(false); 
+
+        const paidBookings = r.data.filter(b => ['PAID', 'PENDING_PAYMENT'].includes(b.status));
+        
+        Promise.all(
+          paidBookings.map(b => 
+            axios.get(`/payments/booking/${b.id}`)
+            .then(res => ({ bookingId: b.id, mode: res.data?.paymentMode }))
+            .catch(() => ({ bookingId: b.id, mode: null }))
+          )
+        ).then(results => {
+          const modes = {};
+          results.forEach(r => { if(r.mode) modes[r.bookingId] = r.mode; });
+          setPaymentModes(modes);
+        });
+
+        Promise.all(
+          paidBookings.map(b => 
+            axios.get(`/reviews/exists/${userId}/${b.service?.id}`)
+            .then(res => res.data ? b.service?.id : null)
+            .catch(() => null)
+          )
+        ).then(results => {
+          setReviewedServices(new Set(results.filter(Boolean)));
+        });
+
+      })
       .catch(() => setLoading(false));
   }, []);
 
-  const isActive = b => ['PENDING', 'SLOT_CONFIRMED', 'PAID'].includes(b.status);
+  const isActive = b => ['PENDING', 'SLOT_CONFIRMED', 'PAID', 'PENDING_PAYMENT'].includes(b.status);
 
   const filtered = bookings.filter(b => {
     if (filter === 'ACTIVE')    return isActive(b);
@@ -130,7 +170,7 @@ export default function BookingHistory() {
 
                         <div style={{ display: 'flex', gap: '16px', marginTop: '6px', flexWrap: 'wrap' }}>
                           <p style={{ fontSize: '12px', color: 'var(--muted)' }}>
-                            📋 Booking #{booking.id}
+                            🔗 {booking.service?.category}
                           </p>
                           <p style={{ fontSize: '12px', color: 'var(--muted)' }}>
                             📅 Booked on {new Date(booking.bookingDate + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -173,6 +213,7 @@ export default function BookingHistory() {
                             Confirm Slot →
                           </button>
                         )}
+
                         {booking.status === 'SLOT_CONFIRMED' && (
                           <button
                             className="btn-primary"
@@ -185,20 +226,45 @@ export default function BookingHistory() {
                             Complete Payment →
                           </button>
                         )}
-                        {booking.status === 'PAID' && (
-                          <button
-                            className="btn-primary"
-                            style={{ fontSize: '12px', padding: '7px 14px' }}
-                            onClick={() => {
-                              localStorage.setItem('bookingId', booking.id);
-                              navigate('/components/Review');
-                            }}
-                          >
-                            Leave a Review →
-                          </button>
+
+                        {(booking.status === 'PAID' || booking.status === 'PENDING_PAYMENT') && (
+                          <>
+                            { !reviewedServices.has(booking.service?.id) && (
+                              <button
+                                className="btn-primary"
+                                style={{ fontSize: '12px', padding: '7px 14px' }}
+                                onClick={() => {
+                                  localStorage.setItem('bookingId', booking.id);
+                                  navigate('/components/Review');
+                                } }
+                              >
+                                Leave a Review →
+                              </button>
+                            )}
+                            { reviewedServices.has(booking.service?.id) && (
+                              <span style={{ fontSize: '12px', color: 'var(--success)', fontWeight: '500' }}>
+                                ⭐ Reviewed
+                              </span>
+                            )}
+
+                            {/* Payment mode badge */}
+                            {paymentModes[booking.id] && (() => {
+                              const mode = PAYMENT_LABELS[paymentModes[booking.id]] || { icon: '💳', label: paymentModes[booking.id] };
+                              return (
+                                <span style={{
+                                  fontSize: '12px', padding: '5px 12px', borderRadius: '999px',
+                                  background: 'var(--navy-bg)', color: 'var(--navy)', fontWeight: '500',
+                                  display: 'flex', alignItems: 'center', gap: '4px'
+                                  }}
+                                >
+                                  {mode.icon} {mode.label}
+                                </span>
+                              );
+                            })()}
+                          </>
                         )}
                       </div>
-                    )}
+                      )}
                   </div>
                 );
               })}

@@ -1,22 +1,35 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../api';
 import Navbar from './Navbar';
 
+const bookingId = localStorage.getItem('bookingId');
+
 export default function Review() {
-  const [service, setService] = useState('');
-  const [rating, setRating]       = useState(0);
-  const [hovered, setHovered]     = useState(0);
-  const [comment, setComment]     = useState('');
-  const [message, setMessage]     = useState('');
-  const [error, setError]         = useState('');
-  const [loading, setLoading]     = useState(false);
+  const [serviceId, setServiceId]     = useState('');
+  const [serviceName, setServiceName] = useState('');
+  const [rating, setRating]           = useState(0);
+  const [hovered, setHovered]         = useState(0);
+  const [comment, setComment]         = useState('');
+  const [message, setMessage]         = useState('');
+  const [error, setError]             = useState('');
+  const [loading, setLoading]         = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const bookingId = localStorage.getItem('bookingId');
+    if (!bookingId) return;
+    axios.get(`/bookings/get/${bookingId}`)
+      .then(r => {
+        setServiceId(String(r.data.service?.id || ''));
+        setServiceName(r.data.service?.serviceName || '');
+      })
+      .catch(console.error);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!rating) { setError('Please select a star rating.'); return; }
-    if (!serviceId) { setError('Please enter a service ID.'); return; }
     setLoading(true); setError(''); setMessage('');
     try {
       const userId = localStorage.getItem('userId');
@@ -76,15 +89,14 @@ export default function Review() {
               )}
             </div>
 
-            {/* Service ID */}
+            {/* Service Name */}
             <div className="qc-field">
               <label className="qc-label">Service</label>
               <input
                 className="qc-input"
-                placeholder="Enter the service you booked"
-                value={serviceId}
-                onChange={e => setService(e.target.value)}
-                required
+                value={serviceName}
+                readOnly
+                style={{ background: 'var(--bg)', cursor: 'not-allowed' }}
               />
             </div>
 

@@ -12,7 +12,7 @@
   --navy:      #042C53;
   --navy-dark: #031E3A;
   --gold:      #FAC775;
-  --gold-text: #BA7517;
+  --gold-text: #eda94b;
   --gold-bg:   #FAEEDA;
   --navy-bg:   #D4E4F5;
   --white:     #FFFFFF;
@@ -81,7 +81,7 @@ body {
 .qc-brand-icon img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 .qc-brand-name {
@@ -140,7 +140,6 @@ body {
 .btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  transform: none;
 }
 
 .btn-outline {
@@ -293,9 +292,9 @@ body {
   background: var(--white);
   border: 1.5px solid var(--border);
   border-radius: 16px;
-  padding: 40px;
+  padding: 30px;
   width: 100%;
-  max-width: 420px;
+  max-width: 500px;
 }
 
 .qc-auth-logo {
@@ -306,6 +305,7 @@ body {
 .qc-auth-logo img {
   width: 200px;
   height: auto;
+  border-radius: 15px;
 }
 
 .qc-auth-logo h1 {
@@ -387,10 +387,12 @@ body {
   cursor: pointer;
   color: #D3D1C7;
   transition: color 0.15s;
+  filter: grayscale(1) opacity(0.3);
 }
 
 .star.active {
   color: var(--gold);
+  filter: none;
 }
 
 /* ── OTP boxes ── */

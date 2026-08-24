@@ -4,11 +4,19 @@ import axios from '../api';
 import Navbar from './Navbar';
 
 const PAYMENT_METHODS = [
-  { value: 'UPI',         label: 'UPI',         icon: '📱' },
-  { value: 'CREDIT_CARD', label: 'Credit Card', icon: '💳' },
-  { value: 'DEBIT_CARD',  label: 'Debit Card',  icon: '🏦' },
-  { value: 'NET_BANKING', label: 'Net Banking', icon: '🌐' },
+  { value: 'UPI',                    label: 'UPI',               icon: '📱' },
+  { value: 'CREDIT_CARD/DEBIT_CARD', label: 'Credit/Debit Card', icon: '💳' },
+  { value: 'NET_BANKING',            label: 'Net Banking',       icon: '🌐' },
+  { value: 'CASH',                   label: 'Cash',              icon: '💵' },
 ];
+
+const formatTime = (t) => {
+  const [h, m] = t.split(':');
+  const hour = parseInt(h);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const display = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+  return `${display}:${m} ${ampm}`;
+};
 
 export default function Payment() {
   const [paymentMode, setPaymentMode] = useState('UPI');
@@ -20,8 +28,6 @@ export default function Payment() {
   const bookingId = localStorage.getItem('bookingId') || '';
   const navigate = useNavigate();
 
-  // ✅ FIX: Fetch the booking on mount so we can display the
-  // service name, slot, and auto-fill the amount — no manual entry needed
   useEffect(() => {
     if (!bookingId) { setFetching(false); return; }
     axios.get(`/bookings/get/${bookingId}`)
@@ -37,7 +43,11 @@ export default function Payment() {
         paymentMode,
         amount: booking.amount,
       });
-      setMessage('Payment successful! Redirecting to your booking confirmation...');
+      if (paymentMode === 'CASH') {
+        setMessage('You can pay after the service is done. Redirecting you to booking confirmation...');
+      } else {
+        setMessage('Payment successful! Redirecting you to booking confirmation...');
+      }
       setTimeout(() => navigate('/components/BookingConfirmed'), 1500);
     } catch {
       setError('Payment failed. Please try again.');
@@ -76,8 +86,8 @@ export default function Payment() {
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <p style={{ fontSize: '11px', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: '600', marginBottom: '6px' }}>
-                Booking #{bookingId}
+              <p style={{ fontSize: '9px', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: '600', marginBottom: '6px' }}>
+                Your booking
               </p>
               <p style={{ fontSize: '16px', fontWeight: '600', color: '#FFFFFF', marginBottom: '4px' }}>
                 {booking?.service?.serviceName || '—'}
@@ -87,11 +97,11 @@ export default function Payment() {
                   📅 {new Date(booking.slotDate + 'T00:00').toLocaleDateString('en-IN', {
                     weekday: 'short', day: 'numeric', month: 'short'
                   })}
-                  {booking?.slotTime && ` · ${booking.slotTime}`}
+                  {booking?.slotTime && ` · ${formatTime(booking.slotTime)}`}
                 </p>
               )}
             </div>
-            {/* ✅ FIX: Amount comes directly from the booking — no manual entry */}
+            
             <div style={{ textAlign: 'right' }}>
               <p style={{ fontSize: '11px', color: 'rgba(250,199,117,0.7)', marginBottom: '4px' }}>Total</p>
               <p style={{ fontSize: '28px', fontWeight: '700', color: 'var(--gold)', lineHeight: 1 }}>

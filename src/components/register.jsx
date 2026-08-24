@@ -52,32 +52,6 @@ export default function Register() {
         {message && <div className="qc-success">{message}</div>}
 
         <form onSubmit={handleSubmit}>
-
-          {/* Role toggle */}
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-            {['USER', 'PROVIDER'].map(role => (
-              <button
-                key={role}
-                type="button"
-                onClick={() => setForm(f => ({ ...f, role }))}
-                style={{
-                  flex: 1,
-                  padding: '10px',
-                  border: `2px solid ${form.role === role ? 'var(--navy)' : 'var(--border)'}`,
-                  borderRadius: '8px',
-                  background: form.role === role ? 'var(--navy)' : 'var(--white)',
-                  color: form.role === role ? 'var(--gold)' : 'var(--muted)',
-                  fontWeight: '600',
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s'
-                }}
-              >
-                {role === 'USER' ? '🧑 Customer' : '⚙️ Provider'}
-              </button>
-            ))}
-          </div>
-
           <div className="qc-field">
             <label className="qc-label">Name</label>
             <input className="qc-input" name="name" placeholder="James Bond"

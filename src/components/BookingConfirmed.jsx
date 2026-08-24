@@ -3,6 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../api';
 import Navbar from './Navbar';
 
+const formatTime = (t) => {
+  const [h, m] = t.split(':');
+  const hour = parseInt(h);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const display = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+  return `${display}:${m} ${ampm}`;
+};
+
 export default function BookingConfirmed() {
   const [booking, setBooking] = useState(null);
   const [error, setError] = useState('');
@@ -53,7 +61,7 @@ export default function BookingConfirmed() {
               {booking?.slotDate && (
                 <p style={{ fontSize: '13px', color: 'var(--gold-text)', marginTop: '4px', fontWeight: '500' }}>
                   📅 {new Date(booking.slotDate + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-                  {booking?.slotTime && ` · ${booking.slotTime}`}
+                  {booking?.slotTime && ` · ${formatTime(booking.slotTime)}`}
                 </p>
               )}
             </div>

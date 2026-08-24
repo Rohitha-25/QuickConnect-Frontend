@@ -10,6 +10,8 @@ const CATEGORY_ICONS = {
   salon:          '✂️',
   'laptop repair':'💻',
   yoga:           '🧘',
+  plumbing:       '🛠️',
+  painting:       '🖌️',
 };
 
 const getIcon = (category = '') => {
@@ -25,7 +27,6 @@ export default function Services() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Pre-fill search from URL query (from home page search)
     const q = searchParams.get('q');
     if (q) setSearch(q);
 
@@ -61,7 +62,7 @@ export default function Services() {
           </div>
           <input
             className="qc-input"
-            placeholder="Filter services..."
+            placeholder="Search services..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             style={{ width: '240px' }}
@@ -96,7 +97,7 @@ export default function Services() {
                 </div>
 
                 {/* Description */}
-                <p style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.6', marginBottom: '16px' }}>
+                <p style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.6', marginBottom: '12px' }}>
                   {service.description || 'Professional service by verified experts.'}
                 </p>
 
@@ -105,10 +106,22 @@ export default function Services() {
                   <span style={{ fontSize: '18px', fontWeight: '700', color: 'var(--navy)' }}>
                     ₹{service.price}
                   </span>
-                  <button className="btn-primary" style={{ padding: '8px 16px', fontSize: '13px' }}
-                    onClick={() => handleBook(service)}>
-                    Book Now
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      className="btn-outline"
+                      style={{ padding: '8px 14px', fontSize: '12px' }}
+                      onClick={() => navigate(`/components/Reviews/${service.id}`)}
+                    >
+                      View Reviews
+                    </button>
+                    <button 
+                      className="btn-primary" 
+                      style={{ padding: '8px 16px', fontSize: '13px' }}
+                      onClick={() => handleBook(service)}
+                    >
+                      Book Now
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

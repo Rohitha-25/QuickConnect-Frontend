@@ -16,7 +16,6 @@ const formatTime = (t) => {
   return `${display}:${m} ${ampm}`;
 };
 
-// Min date: tomorrow. Max date: 30 days from now.
 const tomorrow = () => {
   const d = new Date();
   d.setDate(d.getDate() + 1);
@@ -28,6 +27,17 @@ const maxDate = () => {
   return d.toISOString().split('T')[0];
 };
 
+const CATEGORY_ICONS = {
+  cleaning: '🧹', electrician: '⚡', 'car repair': '🚗',
+  salon: '✂️', 'laptop repair': '💻', yoga: '🧘',
+  plumbing: '🛠️', painting: '🖌️',
+};
+
+const getIcon = (cat = '') => {
+  const key = Object.keys(CATEGORY_ICONS).find(k => cat.toLowerCase().includes(k));
+  return key ? CATEGORY_ICONS[key] : '🔧';
+};
+
 export default function ConfirmSlot() {
   const [slotDate, setSlotDate] = useState('');
   const [slotTime, setSlotTime] = useState('');
@@ -36,6 +46,10 @@ export default function ConfirmSlot() {
   const [loading, setLoading]   = useState(false);
   const bookingId = localStorage.getItem('bookingId');
   const navigate = useNavigate();
+
+  const serviceName     = localStorage.getItem('bookedServiceName') || '';
+  const servicePrice    = localStorage.getItem('bookedServicePrice') || '';
+  const serviceCategory = localStorage.getItem('bookedServiceCategory') || '';
 
   const handleConfirm = async () => {
     if (!slotDate) { setError('Please select a date.'); return; }
@@ -48,7 +62,6 @@ export default function ConfirmSlot() {
         slotTime,
       });
       setMessage('Slot confirmed! Redirecting to payment...');
-      // Store slot for summary display on payment/confirmed pages
       localStorage.setItem('slotDate', slotDate);
       localStorage.setItem('slotTime', slotTime);
       setTimeout(() => navigate('/components/Payment'), 1500);
@@ -92,6 +105,27 @@ export default function ConfirmSlot() {
               {i < 3 && <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />}
             </div>
           ))}
+        </div>
+
+        {/* Service Booked */}
+        <div style={{
+          background: 'var(--navy)', borderRadius: '12px', padding: '16px 20px',
+          marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '14px'
+        }}>
+          <div style={{
+            width: '44px', height: '44px', borderRadius: '10px',
+            background: 'var(--gold-bg)', display: 'flex',
+            alignItems: 'center', justifyContent: 'center', fontSize: '22px', flexShrink: 0
+          }}>
+            {getIcon(serviceCategory)}
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: '9px', color: 'rgba(250,199,117,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>
+              Your booking
+            </p>
+            <p style={{ fontSize: '16px', fontWeight: '600', color: '#FFFFFF' }}>{serviceName}</p>
+          </div>
+          <p style={{ fontSize: '20px', fontWeight: '700', color: 'var(--gold)' }}>₹{servicePrice}</p>
         </div>
 
         {/* Date picker */}

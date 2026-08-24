@@ -3,8 +3,10 @@ import './index.css';
 
 import Login            from './components/Login';
 import Register         from './components/Register';
+import Profile          from './components/Profile';
 import Home             from './components/Home';
 import Services         from './components/Services';
+import ServiceReviews   from './components/ServiceReviews';
 import Booking          from './components/Booking';
 import ConfirmSlot      from './components/ConfirmSlot';
 import Payment          from './components/Payment';
@@ -26,8 +28,10 @@ function App() {
       <Route path="/components/Register"      element={<Register />} />
       <Route path="/components/Logout"        element={<Logout />} />
 
+      <Route path="/components/Profile"            element={<Protected><Profile /></Protected>} />
       <Route path="/components/Home"               element={<Protected><Home /></Protected>} />
       <Route path="/components/Services"           element={<Protected><Services /></Protected>} />
+      <Route path="/components/Reviews/:serviceId" element={<Protected><ServiceReviews /></Protected>} />
       <Route path="/components/Booking"            element={<Protected><Booking /></Protected>} />
       <Route path="/components/ConfirmSlot"        element={<Protected><ConfirmSlot /></Protected>} />
       <Route path="/components/Payment"            element={<Protected><Payment /></Protected>} />

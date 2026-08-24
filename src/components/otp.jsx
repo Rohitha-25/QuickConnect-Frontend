@@ -17,7 +17,7 @@ export default function OTP() {
   const generateOtp = () => {
     const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
     setGenOtp(newOtp);
-    console.log(`OTP: ${newOtp}`); // Remove in production
+    console.log(`OTP: ${newOtp}`);
     setMessage('OTP sent to your registered contact.');
   };
 

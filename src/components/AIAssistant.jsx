@@ -4,7 +4,7 @@ import axios from '../api';
 
 export default function AIAssistant({ onClose, services }) {
   const [messages, setMessages] = useState([
-    { role: 'ai', text: "Hi! Tell me what's required repairing at home or what you need help with — I'll QuickConnect the right service for you ⚙️" }
+    { role: 'ai', text: "Hi! Tell me what's required repairing at home or what you need help with — I'll QuickConnect the right service for you.⚡" }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,10 +23,6 @@ export default function AIAssistant({ onClose, services }) {
     setLoading(true);
 
     try {
-      // ✅ Now calls our own backend, not Anthropic directly.
-      // The backend holds the API key and grounds the AI in the real
-      // services list from the database, so it can never recommend
-      // something that doesn't actually exist.
       const history = messages.map(m => ({ role: m.role, text: m.text }));
       const res = await axios.post('/ai/chat', { message: userMsg, history });
 
