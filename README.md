@@ -1,4 +1,4 @@
-## 👨‍🔧 QuickConnect – Frontend
+## 👨‍🔧 QuickConnect – Home Services Application – Frontend
 
 ### Overview
 QuickConnect is a service-booking platform that connects users with service providers. This repository contains the React frontend for browsing services, booking appointments, viewing booking history, managing profile information and interacting with the backend APIs.
